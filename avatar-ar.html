@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar AR con Código QR</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        .instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <!-- Instrucciones para el usuario -->
+    <div class="instructions">
+        <h3>Instrucciones:</h3>
+        <p>1. Enfoca un código QR con la cámara</p>
+        <p>2. Verás aparecer un avatar 3D</p>
+    </div>
+
+    <!-- Escena de A-Frame con AR.js -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; detectionMode: mono; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true;"
+    >
+        
+        <!-- Marcador para QR code (valor 5) -->
+        <a-marker 
+            type="barcode" 
+            value="5"
+        >
+            <!-- Avatar 3D - Zorro animado -->
+            <a-entity
+                gltf-model="url(https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Fox/glTF/Fox.gltf)"
+                scale="0.05 0.05 0.05"
+                position="0 0.5 0"
+                animation-mixer="clip: Walk"
+            ></a-entity>
+        </a-marker>
+        
+        <!-- Cámara principal -->
+        <a-entity camera></a-entity>
+        
+    </a-scene>
+
+</body>
+</html>
