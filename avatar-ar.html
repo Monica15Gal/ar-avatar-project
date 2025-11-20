@@ -1,44 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset="utf-8">
-    <title>Avatar AR con QR</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar AR - Solución Educativa</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+    </style>
 </head>
-<body style="margin:0px; overflow:hidden;">
+<body>
+    <!-- Panel de información -->
+    <div class="info-panel">
+        <h3>🧠 Asistente Anatómico AR</h3>
+        <p>Enfoca el código QR para ver el modelo 3D del corazón humano</p>
+        <p><strong>Aplicación:</strong> Educación médica</p>
+    </div>
+
+    <!-- Escena AR -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; detectionMode: mono; matrixCodeType: 3x3;"
         renderer="logarithmicDepthBuffer: true;"
     >
-        <!-- Avatar 3D que aparecerá sobre el marcador QR -->
-        <a-entity
-            id="avatar"
-            gltf-model="url(https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Fox/glTF/Fox.gltf)"
-            scale="0.05 0.05 0.05"
-            position="0 0.5 0"
-            animation-mixer
-        ></a-entity>
         
-        <!-- Marcador para QR code (tipo 3x3) -->
+        <!-- MARCADOR QR - Punto 1 del requerimiento -->
         <a-marker 
             type="barcode" 
             value="5"
-            raycaster="objects: .clickable"
-            emitevents="true"
-            cursor="fuse: false; rayOrigin: mouse;"
         >
-            <!-- El avatar estará dentro del marcador para que aparezca cuando se detecte el QR -->
+            <!-- AVATAR 3D - Punto 2 del requerimiento -->
+            <!-- Reemplazamos <a-box> por <a-entity> con modelo GLTF -->
             <a-entity
-                gltf-model="url(https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Fox/glTF/Fox.gltf)"
-                scale="0.05 0.05 0.05"
-                position="0 0.5 0"
-                animation-mixer
-            ></a-entity>
+                gltf-model="url(https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Heart/glTF/Heart.gltf)"
+                scale="0.15 0.15 0.15"
+                position="0 0.3 0"
+                rotation="0 45 0"
+                animation="property: rotation; to: 0 405 0; loop: true; dur: 10000"
+            >
+                <!-- Texto informativo flotante -->
+                <a-text 
+                    value="Corazón Humano" 
+                    position="0 0.8 0" 
+                    align="center"
+                    color="#ff6b6b"
+                    scale="2 2 2"
+                ></a-text>
+            </a-entity>
         </a-marker>
         
         <a-entity camera></a-entity>
+        
     </a-scene>
+
 </body>
 </html>
+
