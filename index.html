@@ -3,264 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente Anatómico AR - Corazón 3D</title>
-    
-    <!-- Three.js con import maps -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://threejs.org/build/three.module.js",
-            "three/addons/": "https://threejs.org/examples/jsm/"
-        }
-    }
-    </script>
-    <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
-    
-    <!-- AR.js para Three.js -->
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/three.js/build/ar-threex.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/three.js/build/ar-threex-location-only.js"></script>
-    
+    <title>Asistente Anatómico AR</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: #000;
-            font-family: Arial, sans-serif;
-        }
-        #info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            border-radius: 10px;
-            z-index: 100;
-            max-width: 300px;
-        }
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 18px;
-            text-align: center;
-            background: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        #c {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-        }
-        .debug {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            color: white;
-            background: rgba(255,0,0,0.7);
-            padding: 10px;
-            font-size: 12px;
-        }
+        body { margin: 0; padding: 0; overflow: hidden; background: #000; }
+        .info { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; z-index: 1000; }
     </style>
 </head>
 <body>
-    <div id="info">
+    <div class="info">
         <h3>🧠 Asistente Anatómico AR</h3>
         <p>Enfoca un código QR con valor "5"</p>
-        <p><strong>Aplicación:</strong> Educación médica</p>
-        <p><small>Mantén el QR estable frente a la cámara</small></p>
-    </div>
-    
-    <div id="loading">
-        <p>🔄 Inicializando cámara AR...</p>
-        <p>Por favor permite el acceso a la cámara</p>
     </div>
 
-    <div id="debug" class="debug" style="display: none;">
-        Estado: Inicializando...
-    </div>
-    
-    <canvas id="c"></canvas>
-
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        
-        // Elementos DOM
-        const loadingElement = document.getElementById('loading');
-        const debugElement = document.getElementById('debug');
-        
-        // ===== CONFIGURACIÓN THREE.JS =====
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 1000); // Rango ajustado
-        const renderer = new THREE.WebGLRenderer({ 
-            canvas: document.getElementById('c'),
-            alpha: true,
-            antialias: true,
-            preserveDrawingBuffer: true
-        });
-        
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limitar pixel ratio
-        renderer.autoClear = false;
-        
-        // ===== CONFIGURACIÓN AR.JS MEJORADA =====
-        const arToolkitSource = new THREEx.ArToolkitSource({
-            sourceType: 'webcam',
-            sourceWidth: 640,  // Resolución controlada
-            sourceHeight: 480,
-            displayWidth: window.innerWidth,
-            displayHeight: window.innerHeight
-        });
-        
-        const arToolkitContext = new THREEx.ArToolkitContext({
-            cameraParametersUrl: 'https://raw.githack.com/AR-js-org/AR.js/master/three.js/data/camera_para.dat',
-            detectionMode: 'mono',
-            maxDetectionRate: 30,
-            canvasWidth: 640,
-            canvasHeight: 480,
-            patternRatio: 0.75  // Mejor para QR
-        });
-        
-        // ===== GRUPO DEL MARCADOR =====
-        const markerRoot = new THREE.Group();
-        scene.add(markerRoot);
-        
-        let arMarkerControls;
-        
-        // ===== INICIALIZACIÓN MEJORADA =====
-        function initializeAR() {
-            debugElement.style.display = 'block';
-            debugElement.textContent = 'Estado: Inicializando cámara...';
-            
-            arToolkitSource.init(function onReady() {
-                debugElement.textContent = 'Estado: Cámara lista, configurando AR...';
-                
-                // Ajustar tamaño después de inicializar
-                arToolkitSource.onResizeElement();
-                arToolkitSource.copyElementSizeTo(renderer.domElement);
-                
-                arToolkitContext.init(function onCompleted() {
-                    debugElement.textContent = 'Estado: AR configurado, cargando modelo...';
-                    
-                    // Configurar controles del marcador DESPUÉS de inicializar contexto
-                    arMarkerControls = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
-                        type: 'barcode',
-                        barcodeValue: '5',
-                        patternUrl: null
-                    });
-                    
-                    // Cargar modelo después de que todo esté listo
-                    loadHeartModel();
-                });
-            });
-        }
-        
-        // ===== CARGAR MODELO DEL CORAZÓN =====
-        function loadHeartModel() {
-            const loader = new GLTFLoader();
-            
-            loadingElement.innerHTML = '<p>🔄 Cargando modelo del corazón...</p>';
-            
-            // Usar modelo MÁS LIVIANO para mejor rendimiento
-            loader.load(
-                'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Box/glTF/Box.gltf', // Modelo simple por ahora
-                (gltf) => {
-                    const heartModel = gltf.scene;
-                    
-                    // Configuración visual mejorada
-                    heartModel.scale.set(0.3, 0.3, 0.3);
-                    heartModel.position.set(0, 0.2, 0);
-                    
-                    // Material rojo para simular corazón
-                    heartModel.traverse((child) => {
-                        if (child.isMesh) {
-                            child.material = new THREE.MeshPhongMaterial({
-                                color: 0xff4444,
-                                shininess: 50
-                            });
-                        }
-                    });
-                    
-                    // Iluminación básica
-                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-                    markerRoot.add(ambientLight);
-                    
-                    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-                    directionalLight.position.set(1, 1, 1);
-                    markerRoot.add(directionalLight);
-                    
-                    markerRoot.add(heartModel);
-                    
-                    loadingElement.style.display = 'none';
-                    debugElement.textContent = 'Estado: ✅ Listo - Enfoca un QR con valor "5"';
-                    
-                    console.log('✅ Sistema AR completamente inicializado');
-                },
-                (progress) => {
-                    const percent = (progress.loaded / progress.total * 100).toFixed(0);
-                    loadingElement.innerHTML = `<p>🔄 Cargando modelo... ${percent}%</p>`;
-                },
-                (error) => {
-                    console.error('Error cargando modelo:', error);
-                    loadingElement.innerHTML = '<p>❌ Error cargando modelo</p>';
-                    debugElement.textContent = 'Estado: Error en modelo';
-                }
-            );
-        }
-        
-        // ===== ANIMACIÓN MEJORADA =====
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            if (arToolkitSource.ready && arToolkitContext.ready) {
-                // Actualizar contexto AR
-                arToolkitContext.update(arToolkitSource.domElement);
-                
-                // Actualizar matriz de proyección de la cámara
-                camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
-                
-                // Renderizar escena
-                renderer.clear();
-                renderer.render(scene, camera);
-                
-                // Debug info
-                if (markerRoot.visible) {
-                    debugElement.textContent = 'Estado: ✅ QR Detectado - Modelo Visible';
-                    debugElement.style.background = 'rgba(0,255,0,0.7)';
-                }
-            }
-        }
-        
-        // ===== MANEJADORES DE EVENTOS =====
-        window.addEventListener('resize', () => {
-            // Solo ajustar si la fuente está lista
-            if (arToolkitSource.ready) {
-                arToolkitSource.onResizeElement();
-                arToolkitSource.copyElementSizeTo(renderer.domElement);
-            }
-            
-            // Ajustar cámara Three.js
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-        
-        // Manejar errores de cámara
-        arToolkitSource.domElement.addEventListener('error', (error) => {
-            console.error('Error de cámara:', error);
-            loadingElement.innerHTML = '<p>❌ Error de cámara</p><p>Verifica los permisos</p>';
-            debugElement.textContent = 'Estado: Error de cámara';
-        });
-        
-        // ===== INICIAR APLICACIÓN =====
-        initializeAR();
-        animate();
-        
-    </script>
+    <a-scene embedded arjs="sourceType: webcam; detectionMode: mono; matrixCodeType: 3x3;">
+        <!-- Marcador QR -->
+        <a-marker type="barcode" value="5">
+            <!-- Modelo 3D del corazón -->
+            <a-entity
+                gltf-model="url(https://cdn.aframe.io/test-models/models/glTF-2.0/Box/glTF/Box.gltf)"
+                scale="0.5 0.5 0.5"
+                position="0 0.5 0"
+                material="color: #ff4444"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 5000"
+            >
+                <a-text value="CORAZÓN" position="0 1 0" color="white" align="center"></a-text>
+            </a-entity>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
 </body>
 </html>
