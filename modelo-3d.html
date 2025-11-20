@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo 3D con QR - Three.js + AR</title>
+    <title>Asistente Anatómico AR - Corazón 3D</title>
     
     <!-- Three.js con import maps -->
     <script type="importmap">
@@ -33,10 +33,11 @@
             top: 10px;
             left: 10px;
             color: white;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border-radius: 5px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 10px;
             z-index: 100;
+            max-width: 300px;
         }
         #loading {
             position: absolute;
@@ -45,16 +46,21 @@
             transform: translate(-50%, -50%);
             color: white;
             font-size: 18px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div id="info">
-        <h3>🚀 Modelo 3D con QR</h3>
-        <p>Enfoca un código QR con valor "5"</p>
+        <h3>🧠 Asistente Anatómico AR</h3>
+        <p>Enfoca un código QR con valor "5" para ver el modelo 3D del corazón humano</p>
+        <p><strong>Aplicación:</strong> Educación médica</p>
     </div>
     
-    <div id="loading">Cargando cámara AR...</div>
+    <div id="loading">
+        <p>Cargando modelo 3D del corazón...</p>
+        <p>Por favor espera</p>
+    </div>
     
     <canvas id="c"></canvas>
 
@@ -95,47 +101,98 @@
             barcodeValue: '5', // Valor del QR que detectará
         });
         
-        // ===== CARGAR MODELO 3D =====
+        // ===== CARGAR MODELO 3D DEL CORAZÓN =====
         const loader = new GLTFLoader();
-        let model;
+        let heartModel;
         
         loader.load(
-            'https://cdn.aframe.io/test-models/models/glTF-2.0/Duck/glTF/Duck.gltf',
+            'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Heart/glTF/Heart.gltf',
             (gltf) => {
-                model = gltf.scene;
-                model.scale.set(5, 5, 5);
-                model.position.set(0, 0, 0);
-                model.rotation.y = Math.PI;
+                heartModel = gltf.scene;
                 
-                // Añadir iluminación
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+                // Ajustar escala y posición del corazón
+                heartModel.scale.set(0.8, 0.8, 0.8);
+                heartModel.position.set(0, 0.3, 0);
+                heartModel.rotation.x = Math.PI / 6; // Inclinar ligeramente
+                
+                // Configurar materiales para mejor visualización
+                heartModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material = new THREE.MeshPhongMaterial({
+                            color: 0xff6b6b, // Color rojo cardiaco
+                            shininess: 30,
+                            transparent: true,
+                            opacity: 0.9
+                        });
+                    }
+                });
+                
+                // Añadir iluminación médica realista
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
                 markerRoot.add(ambientLight);
                 
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-                directionalLight.position.set(10, 10, 5);
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(5, 10, 7);
+                directionalLight.castShadow = true;
                 markerRoot.add(directionalLight);
                 
-                markerRoot.add(model);
+                const pointLight = new THREE.PointLight(0xff4444, 0.5, 10);
+                pointLight.position.set(0, 2, 3);
+                markerRoot.add(pointLight);
+                
+                // Añadir etiqueta flotante
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 256;
+                canvas.height = 128;
+                
+                context.fillStyle = 'rgba(255, 107, 107, 0.9)';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.font = 'bold 24px Arial';
+                context.fillStyle = 'white';
+                context.textAlign = 'center';
+                context.fillText('CORAZÓN HUMANO', canvas.width/2, 40);
+                context.font = '16px Arial';
+                context.fillText('Sistema Cardiovascular', canvas.width/2, 70);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const labelMaterial = new THREE.SpriteMaterial({ 
+                    map: texture,
+                    transparent: true 
+                });
+                const labelSprite = new THREE.Sprite(labelMaterial);
+                labelSprite.scale.set(1.5, 0.75, 1);
+                labelSprite.position.set(0, 1.2, 0);
+                markerRoot.add(labelSprite);
+                
+                markerRoot.add(heartModel);
                 document.getElementById('loading').style.display = 'none';
+                
+                console.log('✅ Modelo del corazón cargado correctamente');
             },
             (progress) => {
                 const percent = (progress.loaded / progress.total * 100).toFixed(2);
-                document.getElementById('loading').textContent = `Cargando modelo 3D... ${percent}%`;
+                document.getElementById('loading').innerHTML = `
+                    <p>Cargando modelo 3D del corazón...</p>
+                    <p>${percent}% completado</p>
+                    <p><small>El modelo puede tardar unos segundos</small></p>
+                `;
             },
             (error) => {
-                console.error('Error cargando modelo:', error);
-                document.getElementById('loading').textContent = 'Error cargando modelo 3D';
+                console.error('❌ Error cargando modelo del corazón:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p>❌ Error cargando el corazón</p>
+                    <p><small>Intenta recargar la página</small></p>
+                `;
             }
         );
         
         // ===== INICIALIZAR AR =====
         arToolkitSource.init(() => {
-            // Ajustar tamaño del renderer al de la fuente de video
             arToolkitSource.onResizeElement();
             arToolkitSource.copyElementSizeTo(renderer.domElement);
             
             arToolkitContext.init(() => {
-                // Copiar matriz de proyección de la cámara
                 camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
             });
         });
@@ -149,16 +206,20 @@
                 arToolkitContext.update(arToolkitSource.domElement);
             }
             
-            // Rotar modelo si está visible
-            if (model && markerRoot.visible) {
-                model.rotation.y += 0.01;
+            // Rotar corazón suavemente si está visible
+            if (heartModel && markerRoot.visible) {
+                heartModel.rotation.y += 0.005; // Rotación lenta para estudio anatómico
+                
+                // Efecto de latido sutil
+                const scale = 0.8 + Math.sin(Date.now() * 0.003) * 0.02;
+                heartModel.scale.set(scale, scale, scale);
             }
             
             renderer.render(scene, camera);
         }
         animate();
         
-        // ===== AJUSTAR TAMAÑO EN REDIMENSIONAMIENTO =====
+        // ===== AJUSTAR TAMAÑO =====
         window.addEventListener('resize', () => {
             if (arToolkitSource.ready) {
                 arToolkitSource.onResizeElement();
