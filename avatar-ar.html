@@ -25,43 +25,47 @@
             z-index: 1000;
             max-width: 300px;
         }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
-    <!-- Panel de información -->
     <div class="info-panel">
         <h3>🧠 Asistente Anatómico AR</h3>
-        <p>Enfoca el código QR para ver el modelo 3D del corazón humano</p>
+        <p>Enfoca un código QR con valor "5"</p>
         <p><strong>Aplicación:</strong> Educación médica</p>
     </div>
 
-    <!-- Escena AR -->
+    <div class="loading" id="loading">Cargando modelo 3D...</div>
+
     <a-scene 
         embedded 
         arjs="sourceType: webcam; detectionMode: mono; matrixCodeType: 3x3;"
         renderer="logarithmicDepthBuffer: true;"
+        loaded="document.getElementById('loading').style.display='none'"
     >
         
-        <!-- MARCADOR QR - Punto 1 del requerimiento -->
-        <a-marker 
-            type="barcode" 
-            value="5"
-        >
-            <!-- AVATAR 3D - Punto 2 del requerimiento -->
-            <!-- Reemplazamos <a-box> por <a-entity> con modelo GLTF -->
+        <!-- MARCADOR QR -->
+        <a-marker type="barcode" value="5">
+            <!-- MODELO MÁS LIVIANO -->
             <a-entity
-                gltf-model="url(https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Heart/glTF/Heart.gltf)"
-                scale="0.15 0.15 0.15"
+                gltf-model="url(https://cdn.aframe.io/test-models/models/glTF-2.0/Box/glTF/Box.gltf)"
+                scale="0.5 0.5 0.5"
                 position="0 0.3 0"
                 rotation="0 45 0"
-                animation="property: rotation; to: 0 405 0; loop: true; dur: 10000"
+                animation="property: rotation; to: 0 405 0; loop: true; dur: 5000"
             >
-                <!-- Texto informativo flotante -->
                 <a-text 
-                    value="Corazón Humano" 
-                    position="0 0.8 0" 
+                    value="Modelo 3D Educativo" 
+                    position="0 1 0" 
                     align="center"
-                    color="#ff6b6b"
+                    color="#4ECDC4"
                     scale="2 2 2"
                 ></a-text>
             </a-entity>
